@@ -44,6 +44,10 @@ public class Player : MonoBehaviour
         [Tooltip("Decay rate of extra forces (m/s²)")]
         public float ExtraForcesDrag = 8f;
 
+        [Header("Knockback")]
+        [Tooltip("Decay rate of knockback force (m/s²)")]
+        public float KnockbackDrag = 6f;
+
         [Header("Debug")]
         [Tooltip("GUI logs of current state")]
         public bool StateLogs;
@@ -81,6 +85,9 @@ public class Player : MonoBehaviour
     [SerializeField, ReadOnly] private StateContainer _state;
 
     public StateContainer State => _state;
+
+    // Knockback
+    private Vector3 _knockbackVelocity;
 
     #region Constants
 
@@ -120,14 +127,11 @@ public class Player : MonoBehaviour
         if (!Instance)
             Instance = this;
 
-        // Inputs
         _moveAction = _references.InputActions.FindActionMap("Player").FindAction("Move");
         _jumpAction = _references.InputActions.FindActionMap("Player").FindAction("Jump");
 
-        // Camera
         _camera = Camera.main;
 
-        // Ground check geometry
         CharacterController cc = _references.Controller;
         _groundCheckRayOffset = cc.center + Vector3.up * (-cc.height * .5f - cc.skinWidth + _settings.GroundTolerance);
         _groundCheckSphereOffset = cc.center + Vector3.up * (-cc.height * .5f + cc.radius - cc.skinWidth - _settings.GroundTolerance);
@@ -160,16 +164,23 @@ public class Player : MonoBehaviour
 
     #endregion Unity Lifecycle
 
+    #region Public Methods
+
+    public void ApplyKnockback(Vector3 direction, float force)
+    {
+        _knockbackVelocity = direction * force;
+    }
+
+    #endregion Public Methods
+
     #region Player Logic
 
     private void CheckGround(float deltaTime)
     {
-        // Raycast for center contact
         Vector3 rayOrigin = transform.position + _groundCheckRayOffset;
         bool rayHit = Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit rayInfo,
                                       _settings.GroundTolerance * 2f, _settings.GroundLayer);
 
-        // OverlapSphere for edge contact
         Vector3 sphereOrigin = transform.position + _groundCheckSphereOffset;
         int overlapCount = Physics.OverlapSphereNonAlloc(sphereOrigin, _groundCheckRadius, _overlapResults, _settings.GroundLayer);
         bool sphereHit = overlapCount > 0;
@@ -181,19 +192,15 @@ public class Player : MonoBehaviour
         {
             Transform currentGround = rayHit ? rayInfo.collider.transform : _overlapResults[0].transform;
 
-            // Initialize references when landing on a new surface to prevent teleporting
             if (currentGround != _state.Ground)
             {
                 _state.Ground = currentGround;
                 _lastPlatformPosition = _state.Ground.position;
                 _lastPlatformRotation = _state.Ground.rotation;
-
                 _platformVelocity.y = 0;
-
                 return;
             }
 
-            // Rotate player around platform pivot
             Quaternion rotationDelta = _state.Ground.rotation * Quaternion.Inverse(_lastPlatformRotation);
             float platformYaw = rotationDelta.eulerAngles.y;
 
@@ -205,28 +212,22 @@ public class Player : MonoBehaviour
                 transform.Rotate(0, platformYaw, 0);
             }
 
-            // Translation delta
             Vector3 platformDelta = _state.Ground.position - _lastPlatformPosition;
             transform.position += platformDelta;
 
-            // Store current state for next frame
             _lastPlatformPosition = _state.Ground.position;
             _lastPlatformRotation = _state.Ground.rotation;
 
-            // Sync physics broadphase to prevents CC from seeing stale overlap
             Physics.SyncTransforms();
 
-            // Reset platform velocity
             _platformVelocity = Vector3.zero;
         }
         else
         {
-            // Inherit platform velocity when player left the ground
             if (wasGrounded && _state.Ground != null)
             {
                 _platformVelocity = (_state.Ground.position - _lastPlatformPosition) / Time.deltaTime;
             }
-            // Decay velocity when player is in the air
             else
             {
                 Vector3 platformVelocity = Vector3.MoveTowards(_platformVelocity, Vector3.zero, _settings.ExtraForcesDrag * deltaTime);
@@ -249,7 +250,6 @@ public class Player : MonoBehaviour
             if (_platformVelocity.y > 0)
             {
                 _platformVelocity.y += GRAVITY * deltaTime;
-
                 if (_platformVelocity.y < 0)
                     _state.Velocity.y += _platformVelocity.y;
             }
@@ -278,10 +278,8 @@ public class Player : MonoBehaviour
         if (moveInput.sqrMagnitude > .001f)
         {
             Quaternion targetRot = Quaternion.LookRotation(moveInput);
-
             float t = _settings.RotationSpeed * deltaTime;
             Vector3 euler = Quaternion.Slerp(transform.rotation, targetRot, t).eulerAngles;
-
             transform.rotation = Quaternion.Euler(0, euler.y, 0);
         }
     }
@@ -297,8 +295,10 @@ public class Player : MonoBehaviour
 
     private void SetMovement(float deltaTime)
     {
-        Vector3 motion = _state.Velocity + _platformVelocity;
+        // Décroissance du knockback
+        _knockbackVelocity = Vector3.MoveTowards(_knockbackVelocity, Vector3.zero, _settings.KnockbackDrag * deltaTime);
 
+        Vector3 motion = _state.Velocity + _platformVelocity + _knockbackVelocity;
         _references.Controller.Move(motion * deltaTime);
     }
 
