@@ -1,83 +1,83 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class LobbyManager : MonoBehaviour
 {
     [Header("Scene")]
-    [SerializeField] private string firstLevelSceneName = "PlayerScene";
+    [SerializeField] private string firstLevelSceneName = "PlateformerScene";
 
-    [Header("Personnage")]
-    [SerializeField] private GameObject[] characterPrefabs;
-    [SerializeField] private Transform characterSpawnPoint;
+    [Header("Personnage déjà présent dans la scène")]
+    [SerializeField] private GameObject currentCharacter;
     [SerializeField] private float rotationSpeed = 40f;
 
-    private GameObject currentCharacter;
-    private int currentIndex;
+    [Header("UI")]
+    [SerializeField] private TMP_Text skinNameText;
+    [SerializeField] private TMP_Text skinRarityText;
+
+    private PlayerCustom playerCustom;
 
     private void Start()
     {
-        currentIndex = PlayerPrefs.GetInt("SelectedCharacter", 0);
-        ShowCharacter(currentIndex);
+        if (currentCharacter == null)
+        {
+            Debug.LogWarning("Aucun BotPivot ou Bot assigné dans le LobbyManager.");
+            return;
+        }
+
+        playerCustom = currentCharacter.GetComponentInChildren<PlayerCustom>();
+
+        if (playerCustom == null)
+        {
+            Debug.LogWarning("Aucun PlayerCustom trouvé sur le Bot.");
+            return;
+        }
+
+        UpdateSkinName();
     }
 
     private void Update()
     {
         if (currentCharacter != null)
         {
-            currentCharacter.transform.Rotate(0f, rotationSpeed * Time.deltaTime, 0f);
+            currentCharacter.transform.Rotate(
+                Vector3.up,
+                rotationSpeed * Time.deltaTime,
+                Space.World
+            );
         }
     }
 
     public void PlayGame()
     {
-        PlayerPrefs.SetInt("SelectedCharacter", currentIndex);
         PlayerPrefs.Save();
-
         SceneManager.LoadScene(firstLevelSceneName);
     }
 
-    public void NextCharacter()
+    public void RandomSkin()
     {
-        currentIndex++;
-
-        if (currentIndex >= characterPrefabs.Length)
-            currentIndex = 0;
-
-        ShowCharacter(currentIndex);
-    }
-
-    public void PreviousCharacter()
-    {
-        currentIndex--;
-
-        if (currentIndex < 0)
-            currentIndex = characterPrefabs.Length - 1;
-
-        ShowCharacter(currentIndex);
-    }
-
-    private void ShowCharacter(int index)
-    {
-        if (characterPrefabs.Length == 0)
+        if (playerCustom == null)
         {
-            Debug.LogWarning("Aucun personnage dans Character Prefabs.");
+            Debug.LogWarning("Aucun PlayerCustom trouvé sur le Bot.");
             return;
         }
 
-        if (currentCharacter != null)
-            Destroy(currentCharacter);
+        playerCustom.Randomize();
+        UpdateSkinName();
+    }
 
-        currentCharacter = Instantiate(
-            characterPrefabs[index],
-            characterSpawnPoint.position,
-            characterSpawnPoint.rotation
-        );
+    private void UpdateSkinName()
+    {
+        if (playerCustom == null)
+            return;
 
-        Animator animator = currentCharacter.GetComponentInChildren<Animator>();
+        if (skinNameText != null)
+            skinNameText.text = playerCustom.GetSkinName();
 
-        if (animator != null)
+        if (skinRarityText != null)
         {
-            animator.Play("idle");
+            skinRarityText.text = playerCustom.GetSkinRarity();
+            skinRarityText.color = playerCustom.GetSkinRarityColor();
         }
     }
 }
