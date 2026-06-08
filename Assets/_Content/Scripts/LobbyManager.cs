@@ -19,6 +19,9 @@ public class LobbyManager : MonoBehaviour
 
     private void Start()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
         if (currentCharacter == null)
         {
             Debug.LogWarning("Aucun BotPivot ou Bot assigné dans le LobbyManager.");
