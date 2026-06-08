@@ -1,0 +1,115 @@
+using UnityEngine;
+using TMPro;
+using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
+
+public class GameManager : MonoBehaviour
+{
+    public static GameManager Instance;
+
+    [Header("Joueur")]
+    public Transform player;
+    public float deathY = -10f;
+
+    [Header("UI")]
+    public TextMeshProUGUI timerText;
+    public GameObject gameOverPanel;
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI restartText;
+
+    [Header("Animation texte")]
+    public float blinkSpeed = 2f;
+
+    private float timer = 0f;
+    private bool gameRunning = true;
+    private bool isDead = false;
+
+    void Awake()
+    {
+        Instance = this;
+
+        // Cache le panel au démarrage
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (!gameRunning)
+        {
+            // Clignotement du texte ESPACE
+            if (restartText != null)
+            {
+                float alpha = (Mathf.Sin(Time.unscaledTime * blinkSpeed * Mathf.PI) + 1f) / 2f;
+                Color c = restartText.color;
+                c.a = Mathf.Lerp(0.1f, 1f, alpha);
+                restartText.color = c;
+            }
+
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+                Restart();
+
+            return;
+        }
+
+        // Chronomètre
+        timer += Time.deltaTime;
+        UpdateTimerUI();
+
+        // Détection chute
+        if (!isDead && player != null && player.position.y < deathY)
+        {
+            isDead = true;
+            GameOver();
+        }
+
+        // Si joueur détruit
+        if (!isDead && player == null)
+        {
+            isDead = true;
+            GameOver();
+        }
+    }
+
+    void UpdateTimerUI()
+    {
+        if (timerText == null) return;
+        int minutes = Mathf.FloorToInt(timer / 60f);
+        int seconds = Mathf.FloorToInt(timer % 60f);
+        int centiseconds = Mathf.FloorToInt((timer * 100f) % 100f);
+        timerText.text = $"{minutes:00}:{seconds:00}.{centiseconds:00}";
+    }
+
+    void GameOver()
+    {
+        gameRunning = false;
+
+        // Sauvegarder le temps AVANT timeScale 0
+        int minutes = Mathf.FloorToInt(timer / 60f);
+        int seconds = Mathf.FloorToInt(timer % 60f);
+
+        // Afficher le panel
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        // Afficher le score
+        if (scoreText != null)
+            scoreText.text = $"Temps survécu :\n{minutes:00}:{seconds:00}";
+
+        // Afficher texte restart visible
+        if (restartText != null)
+        {
+            restartText.text = "Appuyer sur ESPACE pour rejouer";
+            restartText.color = Color.white; // Visible dès le début
+        }
+
+        // Pause APRES avoir tout affiché
+        Time.timeScale = 0f;
+    }
+
+    public void Restart()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+}
