@@ -80,7 +80,7 @@ public class GameManager : MonoBehaviour
         timerText.text = $"{minutes:00}:{seconds:00}.{centiseconds:00}";
     }
 
-    void GameOver()
+    public void GameOver()
     {
         gameRunning = false;
 
