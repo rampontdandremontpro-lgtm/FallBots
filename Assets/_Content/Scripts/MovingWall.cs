@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class MovingWall : MonoBehaviour
 {
-    [SerializeField] private Vector3 moveDirection = Vector3.right;
+    [SerializeField] private Vector3 moveDirection = Vector3.up;
     [SerializeField] private float distance = 4f;
     [SerializeField] private float speed = 2f;
 
