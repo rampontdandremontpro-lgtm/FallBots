@@ -966,6 +966,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 262827442}
+  - component: {fileID: 262827443}
   m_Layer: 6
   m_Name: CubeRouge
   m_TagString: Untagged
@@ -998,6 +999,21 @@ Transform:
   - {fileID: 1367567359}
   m_Father: {fileID: 1221384085}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &262827443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 262827441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 742642dc00c79e845b28b55b8cefa49a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShakingPlatform
+  shakeDuration: 0.5
+  shakeAmount: 0.15
+  waitBetweenShakes: 2
 --- !u!1 &283396716
 GameObject:
   m_ObjectHideFlags: 0
@@ -2439,8 +2455,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961739749}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -36.228523, y: 1.4310769, z: -62.995373}
+  m_LocalRotation: {x: 0.17364818, y: 0, z: 0, w: 0.9848078}
+  m_LocalPosition: {x: -36.228523, y: 3.1411777, z: -62.693836}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
