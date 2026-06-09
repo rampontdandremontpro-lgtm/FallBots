@@ -6,6 +6,12 @@ public class BoutonActivateur : MonoBehaviour
     [Header("Plaques à activer")]
     public PlaqueCachee[] plaques;
 
+    [Header("Cubes tremblants")]
+    public ShakingCube[] cubesTremblants;
+
+    [Header("Objets à faire disparaître")]
+    public GameObject[] objetsADesactiver;
+
     [Header("Timing")]
     public float delaiEntreChaque = 0.3f;
 
@@ -33,13 +39,6 @@ public class BoutonActivateur : MonoBehaviour
             new Vector3(transform.localScale.x * 0.4f, 0.2f, transform.localScale.z * 0.4f)
         );
 
-        // DEBUG
-        if (colliders.Length > 0)
-        {
-            foreach (Collider col in colliders)
-                Debug.Log("Detecte : " + col.gameObject.name + " Tag : " + col.gameObject.tag);
-        }
-
         foreach (Collider col in colliders)
         {
             if (col.CompareTag("Player"))
@@ -55,6 +54,18 @@ public class BoutonActivateur : MonoBehaviour
     {
         if (boutonRenderer != null)
             boutonRenderer.material.color = couleurActive;
+
+        foreach (ShakingCube cube in cubesTremblants)
+        {
+            if (cube != null)
+                cube.Activer();
+        }
+
+        foreach (GameObject obj in objetsADesactiver)
+        {
+            if (obj != null)
+                obj.SetActive(false);
+        }
 
         foreach (PlaqueCachee plaque in plaques)
         {

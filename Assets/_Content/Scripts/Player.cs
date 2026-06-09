@@ -171,6 +171,14 @@ public class Player : MonoBehaviour
         _knockbackVelocity = direction * force;
     }
 
+    public void ResetVelocity()
+    {
+        _state.Velocity = Vector3.zero;
+        _knockbackVelocity = Vector3.zero;
+        _platformVelocity = Vector3.zero;
+        _state.Ground = null;
+    }
+
     #endregion Public Methods
 
     #region Player Logic

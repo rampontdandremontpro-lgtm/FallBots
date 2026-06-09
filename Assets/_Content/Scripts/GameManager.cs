@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI restartText;
+    public TextMeshProUGUI bestTimer;
 
     [Header("Animation texte")]
     public float blinkSpeed = 2f;
@@ -86,27 +87,48 @@ public class GameManager : MonoBehaviour
     {
         gameRunning = false;
 
-        // Sauvegarder le temps AVANT timeScale 0
         int minutes = Mathf.FloorToInt(timer / 60f);
         int seconds = Mathf.FloorToInt(timer % 60f);
 
-        // Afficher le panel
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
 
-        // Afficher le score
         if (scoreText != null)
             scoreText.text = $"Temps survécu :\n{minutes:00}:{seconds:00}";
 
-        // Afficher texte restart visible
-        if (restartText != null)
+        if (PlayerPrefs.HasKey("ArenaTimer"))
         {
-            restartText.text = "Appuyer sur ESPACE pour rejouer";
-            restartText.color = Color.white; // Visible dès le début
-        }
+            float bestTime = PlayerPrefs.GetFloat("ArenaTimer");
+            Debug.Log($"[GameOver] HasKey=true | bestTime={bestTime} | timer={timer}");
 
-        // Pause APRES avoir tout affiché
-        Time.timeScale = 0f;
+            if (timer > bestTime)
+            {
+                PlayerPrefs.SetFloat("ArenaTimer", timer);
+                PlayerPrefs.Save();
+                bestTime = timer;
+            }
+
+            int bMin = Mathf.FloorToInt(bestTime / 60f);
+            int bSec = Mathf.FloorToInt(bestTime % 60f);
+            if (bestTimer != null)
+                bestTimer.text = $"Meilleur temps : {bMin:00}:{bSec:00}";
+            else
+                Debug.LogError("[GameOver] bestTimer est NULL !");
+        }
+        else
+        {
+            Debug.Log($"[GameOver] HasKey=false | timer={timer}");
+
+            PlayerPrefs.SetFloat("ArenaTimer", timer);
+            PlayerPrefs.Save();
+
+            int bMin = Mathf.FloorToInt(timer / 60f);
+            int bSec = Mathf.FloorToInt(timer % 60f);
+            if (bestTimer != null)
+                bestTimer.text = $"Meilleur temps : {bMin:00}:{bSec:00}";
+            else
+                Debug.LogError("[GameOver] bestTimer est NULL !");
+        }
     }
 
     public void Restart()
