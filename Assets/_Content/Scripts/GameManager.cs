@@ -9,10 +9,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Joueur")]
     public Transform player;
+
     public float deathY = -10f;
 
     [Header("UI")]
     public TextMeshProUGUI timerText;
+
     public GameObject gameOverPanel;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI restartText;
@@ -24,7 +26,7 @@ public class GameManager : MonoBehaviour
     private bool gameRunning = true;
     private bool isDead = false;
 
-    void Awake()
+    private void Awake()
     {
         Instance = this;
 
@@ -33,7 +35,7 @@ public class GameManager : MonoBehaviour
             gameOverPanel.SetActive(false);
     }
 
-    void Update()
+    private void Update()
     {
         if (!gameRunning)
         {
@@ -71,7 +73,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void UpdateTimerUI()
+    private void UpdateTimerUI()
     {
         if (timerText == null) return;
         int minutes = Mathf.FloorToInt(timer / 60f);
